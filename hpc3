@@ -1,154 +1,82 @@
-#include <iostream>
 #include <omp.h>
+#include <iostream>
 #include <chrono>
-
-using namespace std;
 using namespace std::chrono;
+using namespace std;
 
+// Display Array
 void displayArray(int nums[], int length)
 {
-    cout << "Array : [";
-    for (int i = 0; i < length; i++)
-    {
+    cout << "Nums: [";
+    for (int i = 0; i < length; i++) {
         cout << nums[i];
-        if (i < length - 1)
+        if (i != length - 1)
             cout << ", ";
     }
     cout << "]" << endl;
 }
 
-void minOperationSequential(int nums[], int length)
-{
-    int minValue = nums[0];
-    for (int i = 0; i < length; i++)
-    {
-        if (nums[i] < minValue)
-        {
-            minValue = nums[i];
-        }
-    }
-    cout << "Min Value :" << minValue << endl;
-}
-
+// Parallel Min Operation
 void minOperation(int nums[], int length)
 {
     int minValue = nums[0];
 #pragma omp parallel for reduction(min : minValue)
-    for (int i = 0; i < length; i++)
-    {
-        if (nums[i] < minValue)
-        {
-            minValue = nums[i];
-        }
+    for (int i = 0; i < length; i++) {
+        minValue = (nums[i] < minValue) ? nums[i] : minValue;
     }
-    cout << "Min Value :" << minValue << endl;
+    cout << "Min value: " << minValue << endl;
 }
 
-void maxOperationSequential(int nums[], int length)
-{
-    int maxValue = nums[0];
-    for (int i = 0; i < length; i++)
-    {
-        if (nums[i] > maxValue)
-        {
-            maxValue = nums[i];
-        }
-    }
-    cout << "max Value :" << maxValue << endl;
-}
-
+// Parallel Max Operation
 void maxOperation(int nums[], int length)
 {
     int maxValue = nums[0];
 #pragma omp parallel for reduction(max : maxValue)
-    for (int i = 0; i < length; i++)
-    {
-        if (nums[i] > maxValue)
-        {
-            maxValue = nums[i];
-        }
+    for (int i = 0; i < length; i++) {
+        maxValue = (nums[i] > maxValue) ? nums[i] : maxValue;
     }
-    cout << "Max Value :" << maxValue << endl;
+    cout << "Max value: " << maxValue << endl;
 }
 
-void sumOperationSequential(int nums[], int length)
-{
-    int sumValue = 0;
-    for (int i = 0; i < length; i++)
-    {
-        sumValue = sumValue + nums[i];
-    }
-    cout << "sum Value :" << sumValue << endl;
-}
-
+// Parallel Sum Operation
 void sumOperation(int nums[], int length)
 {
-    int sumValue = 0;
-#pragma omp parallel for reduction(+ : sumValue)
-    for (int i = 0; i < length; i++)
-    {
-        sumValue = sumValue + nums[i];
+    int sum = 0;
+#pragma omp parallel for reduction(+ : sum)
+    for (int i = 0; i < length; i++) {
+        sum += nums[i];
     }
-    cout << "Sum Value:" << sumValue << endl;
+    cout << "Sum: " << sum << endl;
 }
 
-void avgOperationSequential(int nums[], int length)
-{
-    int sumValue = 0;
-    for (int i = 0; i < length; i++)
-    {
-        sumValue = sumValue + nums[i];
-    }
-    cout << "Average Value :" << (sumValue / length) << endl;
-}
-
+// Parallel Average Operation
 void avgOperation(int nums[], int length)
 {
-    int sumValue = 0;
-#pragma omp parallel for reduction(+ : sumValue)
-    for (int i = 0; i < length; i++)
-    {
-        sumValue = sumValue + nums[i];
+    float sum = 0;
+#pragma omp parallel for reduction(+ : sum)
+    for (int i = 0; i < length; i++) {
+        sum += nums[i];
     }
-    cout << "Average Value:" << (sumValue / length) << endl;
+    cout << "Average: " << (sum / length) << endl;
 }
 
-int main() {
+// Main Function
+int main()
+{
+    int nums[] = {4, 6, 3, 2, 6, 7, 9, 2, 1, 6, 5};
+    int length = sizeof(nums) / sizeof(int);
 
-    int length = 1000000;
-    int nums[length];
-    for (int i = 0; i < length; i++)
-    {
-        nums[i] = i;
-    }
+    auto start = high_resolution_clock::now();
 
+    displayArray(nums, length);
+    minOperation(nums, length);
+    maxOperation(nums, length);
+    sumOperation(nums, length);
+    avgOperation(nums, length);
 
-    // displayArray(nums,length);
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "\nExecution time: " << duration.count() << " microseconds" << endl;
 
-    cout << "Sequential Operations" << endl;
-
-    auto start_seq = high_resolution_clock::now();
-
-    minOperationSequential(nums,length);
-    maxOperationSequential(nums,length);
-    sumOperationSequential(nums,length);
-    avgOperationSequential(nums,length);
-
-    auto stop_seq = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop_seq - start_seq).count();
-    cout << "Execution Time : "<<duration<< " microseconds" << endl;
-
-
-    cout << "Parallel Operations" << endl;
-
-    auto start_parallel = high_resolution_clock::now();
-
-    minOperation(nums,length);
-    maxOperation(nums,length);
-    sumOperation(nums,length);
-    avgOperation(nums,length);
-
-    auto stop_parallel = high_resolution_clock::now();
-    auto duration_parallel = duration_cast<microseconds>(stop_parallel - start_parallel).count();
-    cout << "Execution Time : "<<duration_parallel<< " microseconds" << endl;
+    return 0;
 }
